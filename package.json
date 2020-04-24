@@ -35,8 +35,9 @@
     "mini-css-extract-plugin": "^0.6.0",
     "style-loader": "^0.23.1",
     "ts-loader": "^5.4.3",
-    "typescript": "^3.4.5",
+    "typescript": "^3.8.3",
     "uglifyjs-webpack-plugin": "^2.1.2",
+    "url-loader": "^4.1.0",
     "webpack": "^4.29.6",
     "webpack-async-chunk-names-plugin": "^0.1.1",
     "webpack-bundle-analyzer": "^3.3.2",
@@ -55,6 +56,7 @@
     "react-dom": "^16.8.6",
     "react-loadable": "^5.5.0",
     "react-router-dom": "^5.0.0",
+    "shaka-player": "^2.5.10",
     "whatwg-fetch": "^3.0.0"
   }
 }

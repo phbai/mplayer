@@ -6,14 +6,14 @@ const AsyncChunkNames = require("webpack-async-chunk-names-plugin");
 
 module.exports = {
   entry: {
-    app: "./src/index.tsx"
+    app: "./src/index.tsx",
   },
   output: {
     filename: "[name].bundle.js",
-    chunkFilename: "[name].bundle.js"
+    chunkFilename: "[name].bundle.js",
   },
   resolve: {
-    extensions: [".tsx", ".ts", ".js"]
+    extensions: [".tsx", ".ts", ".js"],
   },
   module: {
     rules: [
@@ -24,24 +24,24 @@ module.exports = {
           {
             loader: MiniCssExtractPlugin.loader,
             options: {
-              hmr: process.env.NODE_ENV === "development"
-            }
+              hmr: process.env.NODE_ENV === "development",
+            },
           },
           {
             loader: "css-loader",
             options: {
               sourceMap: true,
               modules: true,
-              localIdentName: "[local]___[hash:base64:5]"
-            }
+              localIdentName: "[local]___[hash:base64:5]",
+            },
           },
           {
             loader: "less-loader",
             options: {
-              javascriptEnabled: true
-            }
-          }
-        ]
+              javascriptEnabled: true,
+            },
+          },
+        ],
       },
       {
         test: /\.(css|less)$/,
@@ -50,52 +50,68 @@ module.exports = {
           {
             loader: MiniCssExtractPlugin.loader,
             options: {
-              hmr: process.env.NODE_ENV === "development"
-            }
+              hmr: process.env.NODE_ENV === "development",
+            },
           },
           {
-            loader: "css-loader"
+            loader: "css-loader",
           },
           {
             loader: "less-loader",
             options: {
-              javascriptEnabled: true
-            }
-          }
-        ]
+              javascriptEnabled: true,
+            },
+          },
+        ],
       },
       {
         test: /\.jsx?$/,
         exclude: /node_modules/,
-        use: "babel-loader"
+        use: "babel-loader",
       },
       {
         test: /\.(ts|tsx)$/,
         use: [
           {
-            loader: "babel-loader"
+            loader: "babel-loader",
           },
           {
             loader: "ts-loader",
             options: {
-              transpileOnly: true
-            }
-          }
+              transpileOnly: true,
+            },
+          },
         ],
-        exclude: /node_modules/
-      }
-    ]
+        exclude: /node_modules/,
+      },
+      {
+        test: /\.(png|jpe?g|gif|svg)(\?.*)?$/,
+        loader: "url-loader",
+        options: {
+          limit: 10000,
+          name: "images/[name].[hash:7].[ext]",
+        },
+      },
+      {
+        test: /\.(woff2?|eot|ttf|otf)(\?.*)?$/,
+        loader: "url-loader",
+        options: {
+          limit: 10000,
+          name: "fonts/[name].[hash:7].[ext]",
+        },
+      },
+    ],
   },
   plugins: [
     new HtmlWebpackPlugin({
       title: "Caching",
-      template: path.resolve(__dirname, "public/index.html")
+      template: path.resolve(__dirname, "public/index.html"),
     }),
     new MiniCssExtractPlugin({
       filename: "[name].css",
-      chunkFilename: "[name].css"
+      chunkFilename: "[name].css",
     }),
-    new AsyncChunkNames()
+    new AsyncChunkNames(),
   ],
   optimization: {
     runtimeChunk: "single",
@@ -104,15 +120,15 @@ module.exports = {
         vendor: {
           test: /[\\/]node_modules[\\/]/,
           name: "vendors",
-          chunks: "all"
+          chunks: "all",
         },
         styles: {
           name: "styles",
           test: /\.css$/,
           chunks: "all",
-          enforce: true
-        }
-      }
-    }
-  }
+          enforce: true,
+        },
+      },
+    },
+  },
 };
