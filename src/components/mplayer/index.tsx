@@ -6,7 +6,11 @@ import React, {
   useRef,
   forwardRef,
   useImperativeHandle,
+  useState,
 } from "react";
+import styles from "./styles.less";
+import Icon from "../icon/index";
+import { getFormattedTime } from "../../utils";
 
 interface PlayerProps {
   src: string;
@@ -15,8 +19,17 @@ interface PlayerProps {
 
 function Player({ src, width }: PlayerProps, ref: any) {
   const videoRef = useRef(null);
+  const [paused, setPaused] = useState(true);
+  const [progress, setProgress] = useState(0);
 
-  console.log("shaka: ", shaka);
+  const onTimeUpdateListener = () => {
+    const { currentTime, duration } = videoRef?.current;
+    console.log("currentTime: ", currentTime, "duration: ", duration);
+    // this.$refs.timeDisplayCurrentTime.innerHTML = getFormattedTime(currentTime);
+    // this.$refs.timeDisplayDuration.innerHTML = getFormattedTime(duration);
+    setProgress((currentTime / duration) * 100);
+  };
+
   useEffect(() => {
     const initPlayer = async () => {
       shaka.polyfill.installAll();
@@ -30,6 +43,11 @@ function Player({ src, width }: PlayerProps, ref: any) {
     };
 
     initPlayer();
+
+    if (videoRef?.current) {
+      console.log("videoRef?.current: ", videoRef?.current);
+      videoRef?.current.addEventListener("timeupdate", onTimeUpdateListener);
+    }
   }, []);
 
   useImperativeHandle(ref, () => ({
@@ -46,8 +64,30 @@ function Player({ src, width }: PlayerProps, ref: any) {
 
   // return <ShakaPlayer autoPlay src={src} width={width} />;
   return (
-    <div>
-      <video ref={videoRef} width={width} />
+    <div className={styles.mplayer}>
+      <video ref={videoRef} className={styles.video} />
+
+      <div className={styles.controls}>
+        <div className={styles.left}>
+          <Icon
+            name={paused ? "play" : "pause"}
+            onClick={() => {
+              console.log("toggle");
+              if (paused) {
+                videoRef?.current?.play();
+              } else {
+                videoRef?.current?.pause();
+              }
+              setPaused(!paused);
+            }}
+          />
+        </div>
+      </div>
+
+      <div className={styles.progressBar}>
+        <span className={styles.played} style={{ width: `${progress}%` }} />
+        <span className={styles.buffered} />
+      </div>
     </div>
   );
 }

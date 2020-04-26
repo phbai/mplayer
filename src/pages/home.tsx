@@ -18,23 +18,6 @@ export default function Home({ match }: any) {
         src="http://5.9.136.247/[Sakurato.Sub][Kaguya-sama%20wa%20Kokurasetai%20S2][02][GB][1080P]/index.mpd"
         ref={playerRef}
       />
-      <div>
-        <Icon name="play" />
-        <button
-          onClick={(e) => {
-            playerRef?.current?.video?.pause();
-          }}
-        >
-          pause
-        </button>
-        <button
-          onClick={(e) => {
-            playerRef?.current?.video?.play();
-          }}
-        >
-          play
-        </button>
-      </div>
     </Container>
   );
 }

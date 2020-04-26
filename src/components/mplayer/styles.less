@@ -1,0 +1,41 @@
+.mplayer {
+  position: relative;
+  font-size: 0;
+  .video {
+    width: 100%;
+  }
+  .controls {
+    position: absolute;
+    bottom: 13px;
+    height: 50px;
+    color: #fff;
+    width: 100%;
+    .left {
+      margin-left: 20px;
+    }
+  }
+
+  .progressBar {
+    background: hsla(0, 0%, 100%, 0.1);
+    display: flex;
+    height: 4px;
+    overflow: hidden;
+    position: absolute;
+    bottom: 0;
+    width: 100%;
+    z-index: 20;
+    & > span {
+      height: 100%;
+      left: 0;
+      position: absolute;
+    }
+    .played {
+      background: linear-gradient(90deg, #8c92ff, #60e6e6);
+      z-index: 2;
+    }
+    .buffered {
+      background: #888;
+      z-index: 1;
+    }
+  }
+}

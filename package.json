@@ -51,6 +51,7 @@
     "antd": "^3.19.7",
     "babel-polyfill": "^6.26.0",
     "lodash": "^4.17.11",
+    "moment": "^2.24.0",
     "normalize.css": "^8.0.1",
     "react": "^16.8.6",
     "react-dom": "^16.8.6",
