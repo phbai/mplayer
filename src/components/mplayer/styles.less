@@ -29,7 +29,7 @@
         background: rgba(28, 28, 28, 0.9);
         border-radius: 4px;
         position: absolute;
-        bottom: 4.5rem;
+        bottom: 3.5rem;
         box-shadow: 0 2px 4px rgba(0, 0, 0, 0.4);
         color: #fff;
         overflow: hidden;
@@ -37,7 +37,73 @@
         transition: width 0.2s, height 0.2s;
         z-index: 66;
         width: 200px;
-        height: 200px;
+        // height: 200px;
+        .menu {
+          padding: 0.5rem 0;
+          .menuBack {
+            align-items: center;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.2);
+            cursor: pointer;
+            display: flex;
+            font-weight: bold;
+            height: 2.5rem;
+            margin-bottom: 0.5rem;
+            padding: 0 1rem 0.5rem;
+
+            .menuBackIcon {
+              width: 1.7rem;
+              font-size: 1.2rem;
+            }
+            .menuBackTitle {
+              font-size: 0.95rem;
+            }
+          }
+          .menuItem {
+            align-items: center;
+            cursor: pointer;
+            display: flex;
+            justify-content: space-between;
+            height: 2rem;
+            min-width: 12rem;
+            padding: 0 1rem;
+            position: relative;
+            font-size: 14px;
+
+            &:hover {
+              background: rgba(255, 255, 255, 0.1);
+            }
+
+            .menuTitle {
+              font-weight: bold;
+              width: 6rem;
+            }
+            .menuContent {
+              text-align: right;
+              width: 6rem;
+            }
+
+            .menuOption {
+              padding-left: 2rem;
+              width: 7rem;
+              .selectedIcon {
+                position: absolute;
+                left: 10%;
+                top: 30%;
+              }
+            }
+            //   .menuOptionSelected {
+            //     align-items: center;
+            //     display: flex;
+            //     height: 2rem;
+            //     justify-content: center;
+            //     left: 0;
+            //     position: absolute;
+            //     top: 0;
+            //     width: 3rem;
+            //   }
+            // }
+          }
+        }
       }
     }
   }

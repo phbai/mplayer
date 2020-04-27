@@ -9,8 +9,9 @@ import React, {
   useState,
 } from "react";
 import styles from "./styles.less";
-import Icon from "../icon/index";
+import Icon, { ConfigIcon } from "../icon/index";
 import { getFormattedTime } from "../../utils";
+import { formatMenuContent } from "./utils";
 
 interface PlayerProps {
   src: string;
@@ -22,14 +23,28 @@ interface VideoInfoProps {
   duration: number;
 }
 
+export enum ConfigMenuType {
+  Speed = "speed",
+  Resolution = "resolution",
+}
+export interface ConfigMenuItem {
+  title: string;
+  value: number;
+  type?: ConfigMenuType;
+  selected?: Boolean;
+  children?: ConfigMenuItem[];
+}
+
 function Player({ src, width }: PlayerProps, ref: any) {
   const videoRef = useRef(null);
   const [paused, setPaused] = useState(true);
   const [showSetting, setShowSetting] = useState(true);
-  const [menus, setMenus] = useState([
+  const [currentMenu, setCurrentMenu] = useState(null);
+  const [menus, setMenus] = useState<ConfigMenuItem[]>([
     {
       title: "速度",
       value: 1,
+      type: ConfigMenuType.Speed,
       children: [
         {
           title: "0.25x",
@@ -46,6 +61,7 @@ function Player({ src, width }: PlayerProps, ref: any) {
         {
           title: "1x",
           value: 1,
+          selected: true,
         },
         {
           title: "1.25x",
@@ -61,6 +77,20 @@ function Player({ src, width }: PlayerProps, ref: any) {
         },
       ],
     },
+    {
+      title: "分辨率",
+      value: 1080,
+      type: ConfigMenuType.Resolution,
+      children: [
+        {
+          title: "1080P",
+          value: 1080,
+          selected: true,
+        },
+        { title: "720P", value: 720 },
+        { title: "480P", value: 480 },
+      ],
+    },
   ]);
   const [videoInfo, setVideoInfo] = useState<VideoInfoProps>({
     current: 0,
@@ -71,6 +101,10 @@ function Player({ src, width }: PlayerProps, ref: any) {
     const { currentTime, duration } = videoRef?.current;
     console.log("currentTime: ", currentTime, "duration: ", duration);
     setVideoInfo({ current: currentTime, duration });
+  };
+
+  const changeSubMenu = (menu: ConfigMenuItem) => {
+    setCurrentMenu(menu);
   };
 
   useEffect(() => {
@@ -103,13 +137,14 @@ function Player({ src, width }: PlayerProps, ref: any) {
     },
   }));
 
+  console.log("currentMenu: ", currentMenu);
   return (
     <div className={styles.mplayer}>
       <video ref={videoRef} className={styles.video} />
 
       <div className={styles.controls}>
         <div className={styles.left}>
-          <Icon
+          <ConfigIcon
             name={paused ? "play" : "pause"}
             onClick={() => {
               console.log("toggle");
@@ -130,18 +165,65 @@ function Player({ src, width }: PlayerProps, ref: any) {
         </div>
 
         <div className={styles.right}>
-          <Icon
+          <ConfigIcon
             name="settings"
             onClick={() => {
               setShowSetting(!showSetting);
             }}
           />
 
-          <div className={styles.playSettings}>
-            {menus.map((menu) => (
-              <div className={styles.menu}>{menu.title}</div>
-            ))}
-          </div>
+          {showSetting && (
+            <div className={styles.playSettings}>
+              <div className={styles.menu}>
+                {currentMenu ? (
+                  <>
+                    <div
+                      className={styles.menuBack}
+                      onClick={() => changeSubMenu(null)}
+                    >
+                      <Icon
+                        name="chevron-left"
+                        className={styles.menuBackIcon}
+                      />
+                      <span className={styles.menuBackTitle}>
+                        {currentMenu?.title}
+                      </span>
+                    </div>
+
+                    {(currentMenu?.children ?? []).map(
+                      (menu: ConfigMenuItem) => (
+                        <div className={styles.menuItem}>
+                          <div className={styles.menuOption}>
+                            {menu.selected && (
+                              <Icon
+                                name="check"
+                                className={styles.selectedIcon}
+                              />
+                            )}
+                            <span>
+                              {formatMenuContent(menu.value, currentMenu.type)}
+                            </span>
+                          </div>
+                        </div>
+                      )
+                    )}
+                  </>
+                ) : (
+                  menus.map((menu) => (
+                    <div
+                      className={styles.menuItem}
+                      onClick={() => changeSubMenu(menu)}
+                    >
+                      <span className={styles.menuTitle}>{menu.title}</span>
+                      <span className={styles.menuContent}>
+                        {formatMenuContent(menu.value, menu.type)}
+                      </span>
+                    </div>
+                  ))
+                )}
+              </div>
+            </div>
+          )}
         </div>
       </div>
 
