@@ -40,6 +40,9 @@ function Player({ src, width }: PlayerProps, ref: any) {
   const [paused, setPaused] = useState(true);
   const [showSetting, setShowSetting] = useState(true);
   const [currentMenu, setCurrentMenu] = useState(null);
+
+  let player: any = null;
+
   const [menus, setMenus] = useState<ConfigMenuItem[]>([
     {
       title: "速度",
@@ -79,16 +82,16 @@ function Player({ src, width }: PlayerProps, ref: any) {
     },
     {
       title: "分辨率",
-      value: 1080,
+      value: 0,
       type: ConfigMenuType.Resolution,
       children: [
         {
           title: "1080P",
           value: 1080,
-          selected: true,
         },
         { title: "720P", value: 720 },
         { title: "480P", value: 480 },
+        { title: "自动", value: 0, selected: true },
       ],
     },
   ]);
@@ -99,7 +102,6 @@ function Player({ src, width }: PlayerProps, ref: any) {
 
   const onTimeUpdateListener = () => {
     const { currentTime, duration } = videoRef?.current;
-    console.log("currentTime: ", currentTime, "duration: ", duration);
     setVideoInfo({ current: currentTime, duration });
   };
 
@@ -107,10 +109,69 @@ function Player({ src, width }: PlayerProps, ref: any) {
     setCurrentMenu(menu);
   };
 
+  const changeMenu = (type: ConfigMenuType, value: number) => {
+    const updatedMenu = menus.map((menu) => {
+      if (menu.type === type) {
+        return {
+          ...menu,
+          children: menu.children.map((subMenuItem) => {
+            if (subMenuItem.value === value) {
+              return {
+                ...subMenuItem,
+                selected: true,
+              };
+            }
+            return {
+              ...subMenuItem,
+              selected: false,
+            };
+          }),
+          value,
+        };
+      }
+      return menu;
+    });
+
+    console.log("player: ", player);
+    switch (type) {
+      case ConfigMenuType.Speed:
+        videoRef.current.playbackRate = value;
+        break;
+      case ConfigMenuType.Resolution:
+        /**
+         * const config = {abr: {enabled: false}};
+    this.player.configure(config);
+    const clearBuffer = this.controls.getConfig().clearBufferOnQualityChange;
+    this.player.selectVariantTrack(track, clearBuffer);
+         */
+        if (value === 0) {
+          const config = { abr: { enabled: true } };
+          player?.configure(config);
+        } else {
+          const config = { abr: { enabled: false } };
+          player?.configure(config);
+
+          const allTracks = player?.getVariantTracks();
+          console.log("allTracks: ", allTracks);
+          const selectedTrack = allTracks?.filter(
+            (track: any) => track.height === value
+          );
+          player.selectVariantTrack(selectedTrack, true);
+        }
+
+        break;
+      default:
+        break;
+    }
+    setMenus(updatedMenu);
+    // 返回顶层菜单
+    setCurrentMenu(null);
+  };
+
   useEffect(() => {
     const initPlayer = async () => {
       shaka.polyfill.installAll();
-      var player = new shaka.Player(videoRef.current);
+      player = new shaka.Player(videoRef.current);
 
       try {
         await player.load(src);
@@ -137,7 +198,6 @@ function Player({ src, width }: PlayerProps, ref: any) {
     },
   }));
 
-  console.log("currentMenu: ", currentMenu);
   return (
     <div className={styles.mplayer}>
       <video ref={videoRef} className={styles.video} />
@@ -193,7 +253,12 @@ function Player({ src, width }: PlayerProps, ref: any) {
                     {(currentMenu?.children ?? []).map(
                       (menu: ConfigMenuItem) => (
                         <div className={styles.menuItem}>
-                          <div className={styles.menuOption}>
+                          <div
+                            className={styles.menuOption}
+                            onClick={() =>
+                              changeMenu(currentMenu.type, menu.value)
+                            }
+                          >
                             {menu.selected && (
                               <Icon
                                 name="check"
