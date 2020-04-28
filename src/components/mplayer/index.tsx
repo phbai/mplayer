@@ -40,8 +40,8 @@ function Player({ src, width }: PlayerProps, ref: any) {
   const [paused, setPaused] = useState(true);
   const [showSetting, setShowSetting] = useState(true);
   const [currentMenu, setCurrentMenu] = useState(null);
-
-  let player: any = null;
+  const [isFullScreen, setIsFullScreen] = useState(false);
+  const [player, setPlayer] = useState(null);
 
   const [menus, setMenus] = useState<ConfigMenuItem[]>([
     {
@@ -95,6 +95,7 @@ function Player({ src, width }: PlayerProps, ref: any) {
       ],
     },
   ]);
+
   const [videoInfo, setVideoInfo] = useState<VideoInfoProps>({
     current: 0,
     duration: 0,
@@ -132,18 +133,11 @@ function Player({ src, width }: PlayerProps, ref: any) {
       return menu;
     });
 
-    console.log("player: ", player);
     switch (type) {
       case ConfigMenuType.Speed:
         videoRef.current.playbackRate = value;
         break;
       case ConfigMenuType.Resolution:
-        /**
-         * const config = {abr: {enabled: false}};
-    this.player.configure(config);
-    const clearBuffer = this.controls.getConfig().clearBufferOnQualityChange;
-    this.player.selectVariantTrack(track, clearBuffer);
-         */
         if (value === 0) {
           const config = { abr: { enabled: true } };
           player?.configure(config);
@@ -156,6 +150,7 @@ function Player({ src, width }: PlayerProps, ref: any) {
           const selectedTrack = allTracks?.filter(
             (track: any) => track.height === value
           );
+          console.log("selectedTrack: ", selectedTrack);
           player.selectVariantTrack(selectedTrack, true);
         }
 
@@ -171,11 +166,13 @@ function Player({ src, width }: PlayerProps, ref: any) {
   useEffect(() => {
     const initPlayer = async () => {
       shaka.polyfill.installAll();
-      player = new shaka.Player(videoRef.current);
+      const player = new shaka.Player(videoRef.current);
 
       try {
         await player.load(src);
         console.log("player.getVariantTracks: ", player?.getVariantTracks());
+
+        setPlayer(player);
       } catch (err) {
         console.error("Error code", err.code, "object", err);
       }
@@ -197,6 +194,9 @@ function Player({ src, width }: PlayerProps, ref: any) {
       return videoRef.current;
     },
   }));
+
+  const allTracks = player?.getVariantTracks();
+  console.log("render allTracks: ", allTracks);
 
   return (
     <div className={styles.mplayer}>
@@ -229,6 +229,34 @@ function Player({ src, width }: PlayerProps, ref: any) {
             name="settings"
             onClick={() => {
               setShowSetting(!showSetting);
+            }}
+          />
+
+          <ConfigIcon
+            name={isFullScreen ? "minimize-2" : "maximize-2"}
+            onClick={() => {
+              // setShowSetting(!showSetting);
+              let func;
+              let elem;
+              if (isFullScreen) {
+                elem = document;
+                func =
+                  document?.exitFullscreen ||
+                  document?.webkitExitFullscreen ||
+                  document?.mozCancelFullScreen ||
+                  document?.msExitFullscreen;
+              } else {
+                elem = videoRef.current;
+                func =
+                  elem.requestFullscreen ||
+                  elem.webkitRequestFullscreen ||
+                  elem.mozRequestFullScreen ||
+                  elem.msRequestFullscreen;
+              }
+              if (func) {
+                func.call(elem);
+              }
+              setIsFullScreen(!isFullScreen);
             }}
           />
 
