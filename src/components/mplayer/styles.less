@@ -1,12 +1,16 @@
 .mplayer {
   position: relative;
   font-size: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  // cursor: pointer;
   .video {
     width: 100%;
   }
   .controls {
     position: absolute;
-    bottom: 13px;
+    bottom: 1.5rem;
     height: 50px;
     color: #fff;
     width: 100%;
@@ -108,6 +112,16 @@
     }
   }
 
+  .seekArea {
+    bottom: 0;
+    cursor: pointer;
+    height: 1.5rem;
+    left: 0;
+    pointer-events: all;
+    position: absolute;
+    right: 0;
+    z-index: 10;
+  }
   .progressBar {
     background: hsla(0, 0%, 100%, 0.1);
     display: flex;
@@ -130,5 +144,8 @@
       background: #888;
       z-index: 1;
     }
+  }
+  .loading {
+    position: absolute;
   }
 }

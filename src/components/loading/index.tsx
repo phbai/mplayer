@@ -1,5 +1,16 @@
-import React from 'react';
+import React from "react";
+import classNames from "classnames";
+import loading from "../../assets/loading.svg";
 
-export default function Loading() {
-  return <div>loading...</div>;
+interface LoadingProps {
+  style?: React.CSSProperties;
+  className?: string;
+}
+export default function Loading({ style, className }: LoadingProps) {
+  const classes = classNames(className);
+  return (
+    <div className={classes} style={style}>
+      <img src={loading} />
+    </div>
+  );
 }

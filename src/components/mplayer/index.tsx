@@ -12,6 +12,7 @@ import styles from "./styles.less";
 import Icon, { ConfigIcon } from "../icon/index";
 import { getFormattedTime } from "../../utils";
 import { formatMenuContent } from "./utils";
+import Loading from "../loading/index";
 
 interface PlayerProps {
   src: string;
@@ -42,6 +43,9 @@ function Player({ src, width }: PlayerProps, ref: any) {
   const [currentMenu, setCurrentMenu] = useState(null);
   const [isFullScreen, setIsFullScreen] = useState(false);
   const [player, setPlayer] = useState(null);
+  const [isBuffering, setIsBuffering] = useState(false);
+  const video = videoRef?.current;
+  console.log("video: ", video);
 
   const [menus, setMenus] = useState<ConfigMenuItem[]>([
     {
@@ -102,12 +106,34 @@ function Player({ src, width }: PlayerProps, ref: any) {
   });
 
   const onTimeUpdateListener = () => {
-    const { currentTime, duration } = videoRef?.current;
+    const { currentTime, duration } = video;
     setVideoInfo({ current: currentTime, duration });
   };
 
   const changeSubMenu = (menu: ConfigMenuItem) => {
     setCurrentMenu(menu);
+  };
+
+  const onMouseDown = ({
+    nativeEvent: { offsetX },
+    target: { clientWidth },
+  }: React.MouseEvent<HTMLDivElement, MouseEvent>) => {
+    const seekTime = (offsetX / clientWidth) * video.duration;
+    setVideoInfo({ current: seekTime, duration: video.duration });
+  };
+
+  const onMouseUp = ({
+    nativeEvent: { offsetX },
+    target: { clientWidth },
+  }: React.MouseEvent<HTMLDivElement, MouseEvent>) => {
+    const seekTime = (offsetX / clientWidth) * video.duration;
+    video.currentTime = seekTime;
+    // sync history
+    // this.player.syncWatchHistory(true)
+  };
+
+  const onContextMenu = (e: any) => {
+    e.preventDefault();
   };
 
   const changeMenu = (type: ConfigMenuType, value: number) => {
@@ -135,7 +161,7 @@ function Player({ src, width }: PlayerProps, ref: any) {
 
     switch (type) {
       case ConfigMenuType.Speed:
-        videoRef.current.playbackRate = value;
+        video.playbackRate = value;
         break;
       case ConfigMenuType.Resolution:
         if (value === 0) {
@@ -163,16 +189,29 @@ function Player({ src, width }: PlayerProps, ref: any) {
     setCurrentMenu(null);
   };
 
+  const toggerPlay = () => {
+    if (paused) {
+      video?.play();
+    } else {
+      video?.pause();
+    }
+    setPaused(!paused);
+  };
+
   useEffect(() => {
     const initPlayer = async () => {
       shaka.polyfill.installAll();
-      const player = new shaka.Player(videoRef.current);
+      const player = new shaka.Player(videoRef?.current);
 
       try {
         await player.load(src);
         console.log("player.getVariantTracks: ", player?.getVariantTracks());
 
         setPlayer(player);
+
+        player.addEventListener("buffering", (event: any) => {
+          setIsBuffering(event.buffering);
+        });
       } catch (err) {
         console.error("Error code", err.code, "object", err);
       }
@@ -180,9 +219,9 @@ function Player({ src, width }: PlayerProps, ref: any) {
 
     initPlayer();
 
-    if (videoRef?.current) {
-      console.log("videoRef?.current: ", videoRef?.current);
-      videoRef?.current.addEventListener("timeupdate", onTimeUpdateListener);
+    if (video) {
+      console.log("video: ", video);
+      video.addEventListener("timeupdate", onTimeUpdateListener);
     }
   }, []);
 
@@ -191,31 +230,17 @@ function Player({ src, width }: PlayerProps, ref: any) {
     //   return controller.current.player;
     // },
     get video() {
-      return videoRef.current;
+      return video;
     },
   }));
 
-  const allTracks = player?.getVariantTracks();
-  console.log("render allTracks: ", allTracks);
-
   return (
-    <div className={styles.mplayer}>
+    <div className={styles.mplayer} onContextMenu={onContextMenu}>
       <video ref={videoRef} className={styles.video} />
 
       <div className={styles.controls}>
         <div className={styles.left}>
-          <ConfigIcon
-            name={paused ? "play" : "pause"}
-            onClick={() => {
-              console.log("toggle");
-              if (paused) {
-                videoRef?.current?.play();
-              } else {
-                videoRef?.current?.pause();
-              }
-              setPaused(!paused);
-            }}
-          />
+          <ConfigIcon name={paused ? "play" : "pause"} onClick={toggerPlay} />
 
           <div className={styles.timeDisplay}>
             <span>{getFormattedTime(videoInfo?.current)}</span>
@@ -320,6 +345,11 @@ function Player({ src, width }: PlayerProps, ref: any) {
         </div>
       </div>
 
+      <div
+        className={styles.seekArea}
+        onMouseDown={onMouseDown}
+        onMouseUp={onMouseUp}
+      />
       <div className={styles.progressBar}>
         <span
           className={styles.played}
@@ -329,6 +359,8 @@ function Player({ src, width }: PlayerProps, ref: any) {
         />
         <span className={styles.buffered} />
       </div>
+
+      {isBuffering && <Loading className={styles.loading} />}
     </div>
   );
 }
