@@ -45,7 +45,9 @@ function Player({ src, width }: PlayerProps, ref: any) {
   const [isFullScreen, setIsFullScreen] = useState(false);
   const [player, setPlayer] = useState(null);
   const [isBuffering, setIsBuffering] = useState(false);
+  const [isMuted, setIsMuted] = useState(false);
   const video = videoRef?.current;
+  let savedVolume = 0;
 
   const [menus, setMenus] = useState<ConfigMenuItem[]>([
     {
@@ -107,8 +109,9 @@ function Player({ src, width }: PlayerProps, ref: any) {
   });
 
   const onTimeUpdateListener = () => {
-    const { currentTime, duration } = video;
-    setVideoInfo({ current: currentTime, duration });
+    if (video) {
+      setVideoInfo({ current: video?.currentTime, duration: video?.duration });
+    }
   };
 
   const onProgressListener = () => {
@@ -208,7 +211,7 @@ function Player({ src, width }: PlayerProps, ref: any) {
     setCurrentMenu(null);
   };
 
-  const toggerPlay = () => {
+  const togglePlay = () => {
     if (paused) {
       video?.play();
     } else {
@@ -218,7 +221,26 @@ function Player({ src, width }: PlayerProps, ref: any) {
   };
 
   const toggleMute = () => {
-    //
+    if (isMuted) {
+      setIsMuted(false);
+      console.log(
+        "if video.volume:",
+        video.volume,
+        "savedVolume:",
+        savedVolume
+      );
+      video.volume = savedVolume;
+    } else {
+      setIsMuted(true);
+      savedVolume = video.volume;
+      console.log(
+        "else video.volume:",
+        video.volume,
+        "savedVolume:",
+        savedVolume
+      );
+      video.volume = 0;
+    }
   };
 
   useEffect(() => {
@@ -246,6 +268,12 @@ function Player({ src, width }: PlayerProps, ref: any) {
       videoRef?.current.addEventListener("timeupdate", onTimeUpdateListener);
       videoRef?.current.addEventListener("progress", onProgressListener);
     }
+
+    return function cleanUp() {
+      console.log("cleaning...");
+      videoRef?.current.removeEventListener("timeupdate", onTimeUpdateListener);
+      videoRef?.current.removeEventListener("progress", onProgressListener);
+    };
   }, []);
 
   useImperativeHandle(ref, () => ({
@@ -256,18 +284,18 @@ function Player({ src, width }: PlayerProps, ref: any) {
 
   return (
     <div className={styles.mplayer} onContextMenu={onContextMenu}>
-      <video ref={videoRef} className={styles.video} onClick={toggerPlay} />
+      <video ref={videoRef} className={styles.video} onClick={togglePlay} />
 
       <div className={styles.controls}>
         <div className={styles.left}>
-          <ConfigIcon name={paused ? "play" : "pause"} onClick={toggerPlay} />
+          <ConfigIcon name={paused ? "play" : "pause"} onClick={togglePlay} />
 
           <div
             className={`volume-control`}
             onMouseEnter={() => null}
             onMouseLeave={() => null}
           >
-            <i className="fe-mute" onClick={toggleMute} />
+            <ConfigIcon name="volume-2" onClick={toggleMute} />
             <div className="volumeSlider" onMouseDown={() => null}>
               <div className="volume-slider-handle" />
             </div>
