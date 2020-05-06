@@ -193,11 +193,9 @@ function Player({ src, width }: PlayerProps, ref: any) {
           player?.configure(config);
 
           const allTracks = player?.getVariantTracks();
-          console.log("allTracks: ", allTracks);
           const selectedTrack = allTracks?.filter(
             (track: any) => track.height === value
           );
-          console.log("selectedTrack: ", selectedTrack);
           player.selectVariantTrack(selectedTrack, true);
         }
 
@@ -251,9 +249,6 @@ function Player({ src, width }: PlayerProps, ref: any) {
   }, []);
 
   useImperativeHandle(ref, () => ({
-    // get player() {
-    //   return controller.current.player;
-    // },
     get video() {
       return video;
     },
@@ -285,12 +280,17 @@ function Player({ src, width }: PlayerProps, ref: any) {
         </div>
 
         <div className={styles.right}>
-          <ConfigIcon
-            name="settings"
-            onClick={() => {
-              setShowSetting(!showSetting);
-            }}
-          />
+          <div className={styles.setting}>
+            <ConfigIcon
+              name="settings"
+              onClick={() => {
+                setShowSetting(!showSetting);
+              }}
+            />
+            {video?.videoHeight && (
+              <span className={styles.resolution}>{video?.videoHeight}</span>
+            )}
+          </div>
 
           <ConfigIcon
             name={isFullScreen ? "minimize-2" : "maximize-2"}
