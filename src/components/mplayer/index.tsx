@@ -22,6 +22,7 @@ interface PlayerProps {
 interface VideoInfoProps {
   current: number;
   duration: number;
+  buffered?: number;
 }
 
 export enum ConfigMenuType {
@@ -45,7 +46,6 @@ function Player({ src, width }: PlayerProps, ref: any) {
   const [player, setPlayer] = useState(null);
   const [isBuffering, setIsBuffering] = useState(false);
   const video = videoRef?.current;
-  console.log("video: ", video);
 
   const [menus, setMenus] = useState<ConfigMenuItem[]>([
     {
@@ -103,11 +103,32 @@ function Player({ src, width }: PlayerProps, ref: any) {
   const [videoInfo, setVideoInfo] = useState<VideoInfoProps>({
     current: 0,
     duration: 0,
+    buffered: 0,
   });
 
   const onTimeUpdateListener = () => {
     const { currentTime, duration } = video;
     setVideoInfo({ current: currentTime, duration });
+  };
+
+  const onProgressListener = () => {
+    const { buffered, currentTime, duration } = videoRef?.current;
+    // https://developer.mozilla.org/en-US/docs/Web/Apps/Fundamentals/Audio_and_video_delivery/buffering_seeking_time_ranges
+    // find the buffered block within current time
+    let block = null;
+    for (let i = 0; i < buffered.length; i += 1) {
+      const start = buffered.start(i);
+      const end = buffered.end(i);
+      if (start <= currentTime && currentTime <= end) {
+        block = { start, end };
+      }
+    }
+    if (!block) {
+      return;
+    }
+    const { start: _, end } = block;
+    const loaded = (end / duration) * 100;
+    setVideoInfo({ current: currentTime, duration, buffered: loaded });
   };
 
   const changeSubMenu = (menu: ConfigMenuItem) => {
@@ -219,9 +240,9 @@ function Player({ src, width }: PlayerProps, ref: any) {
 
     initPlayer();
 
-    if (video) {
-      console.log("video: ", video);
-      video.addEventListener("timeupdate", onTimeUpdateListener);
+    if (videoRef?.current) {
+      videoRef?.current.addEventListener("timeupdate", onTimeUpdateListener);
+      videoRef?.current.addEventListener("progress", onProgressListener);
     }
   }, []);
 
@@ -236,7 +257,7 @@ function Player({ src, width }: PlayerProps, ref: any) {
 
   return (
     <div className={styles.mplayer} onContextMenu={onContextMenu}>
-      <video ref={videoRef} className={styles.video} />
+      <video ref={videoRef} className={styles.video} onClick={toggerPlay} />
 
       <div className={styles.controls}>
         <div className={styles.left}>
@@ -357,7 +378,10 @@ function Player({ src, width }: PlayerProps, ref: any) {
             width: `${(videoInfo?.current / videoInfo?.duration) * 100}%`,
           }}
         />
-        <span className={styles.buffered} />
+        <span
+          className={styles.buffered}
+          style={{ width: `${videoInfo?.buffered}%` }}
+        />
       </div>
 
       {isBuffering && <Loading className={styles.loading} />}
