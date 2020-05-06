@@ -219,6 +219,10 @@ function Player({ src, width }: PlayerProps, ref: any) {
     setPaused(!paused);
   };
 
+  const toggleMute = () => {
+    //
+  };
+
   useEffect(() => {
     const initPlayer = async () => {
       shaka.polyfill.installAll();
@@ -263,6 +267,16 @@ function Player({ src, width }: PlayerProps, ref: any) {
         <div className={styles.left}>
           <ConfigIcon name={paused ? "play" : "pause"} onClick={toggerPlay} />
 
+          <div
+            className={`volume-control`}
+            onMouseEnter={() => null}
+            onMouseLeave={() => null}
+          >
+            <i className="fe-mute" onClick={toggleMute} />
+            <div className="volumeSlider" onMouseDown={() => null}>
+              <div className="volume-slider-handle" />
+            </div>
+          </div>
           <div className={styles.timeDisplay}>
             <span>{getFormattedTime(videoInfo?.current)}</span>
             <span>{` / `}</span>
