@@ -8,11 +8,13 @@ import React, {
   useImperativeHandle,
   useState,
 } from "react";
+import classNames from "classnames";
 import styles from "./styles.less";
 import Icon, { ConfigIcon } from "../icon/index";
 import { getFormattedTime } from "../../utils";
 import { formatMenuContent } from "./utils";
 import Loading from "../loading/index";
+import { VolumeControl } from "./volumeControl";
 
 interface PlayerProps {
   src: string;
@@ -39,68 +41,71 @@ export interface ConfigMenuItem {
 
 function Player({ src, width }: PlayerProps, ref: any) {
   const videoRef = useRef(null);
+  const mplayerRef = useRef(null);
   const [paused, setPaused] = useState(true);
-  const [showSetting, setShowSetting] = useState(true);
+  const [showSetting, setShowSetting] = useState(false);
   const [currentMenu, setCurrentMenu] = useState(null);
   const [isFullScreen, setIsFullScreen] = useState(false);
-  const [player, setPlayer] = useState(null);
+  const [isBrowserFullScreen, setIsBrowserFullScreen] = useState(false);
+  const [isContainerHovering, setIsContainerHovering] = useState(false);
+  const playerRef = useRef(null);
   const [isBuffering, setIsBuffering] = useState(false);
-  const [isMuted, setIsMuted] = useState(false);
   const video = videoRef?.current;
-  let savedVolume = 0;
 
-  const [menus, setMenus] = useState<ConfigMenuItem[]>([
-    {
-      title: "速度",
-      value: 1,
-      type: ConfigMenuType.Speed,
-      children: [
-        {
-          title: "0.25x",
-          value: 0.25,
-        },
-        {
-          title: "0.5x",
-          value: 0.5,
-        },
-        {
-          title: "0.75x",
-          value: 0.75,
-        },
-        {
-          title: "1x",
-          value: 1,
-          selected: true,
-        },
-        {
-          title: "1.25x",
-          value: 1.25,
-        },
-        {
-          title: "1.5x",
-          value: 1.5,
-        },
-        {
-          title: "2x",
-          value: 2,
-        },
-      ],
-    },
-    {
-      title: "分辨率",
-      value: 0,
-      type: ConfigMenuType.Resolution,
-      children: [
-        {
-          title: "1080P",
-          value: 1080,
-        },
-        { title: "720P", value: 720 },
-        { title: "480P", value: 480 },
-        { title: "自动", value: 0, selected: true },
-      ],
-    },
-  ]);
+  const [menus, setMenus] = useState<ConfigMenuItem[]>(
+    [
+      {
+        title: "速度",
+        value: 1,
+        type: ConfigMenuType.Speed,
+        children: [
+          {
+            title: "0.25x",
+            value: 0.25,
+          },
+          {
+            title: "0.5x",
+            value: 0.5,
+          },
+          {
+            title: "0.75x",
+            value: 0.75,
+          },
+          {
+            title: "1x",
+            value: 1,
+            selected: true,
+          },
+          {
+            title: "1.25x",
+            value: 1.25,
+          },
+          {
+            title: "1.5x",
+            value: 1.5,
+          },
+          {
+            title: "2x",
+            value: 2,
+          },
+        ],
+      },
+      src.endsWith(".mpd") && {
+        title: "分辨率",
+        value: 0,
+        type: ConfigMenuType.Resolution,
+        children: [
+          {
+            title: "1080P",
+            value: 1080,
+          },
+          { title: "720P", value: 720 },
+          { title: "480P", value: 480 },
+          { title: "自动", value: 0, selected: true },
+        ],
+      },
+    ].filter(Boolean)
+  );
 
   const [videoInfo, setVideoInfo] = useState<VideoInfoProps>({
     current: 0,
@@ -160,6 +165,31 @@ function Player({ src, width }: PlayerProps, ref: any) {
     e.preventDefault();
   };
 
+  const onFullscreenChangeListener = () => {
+    const elem =
+      document.fullscreenElement ||
+      document.webkitFullscreenElement ||
+      document.mozFullScreenElement ||
+      document.msFullscreenElement;
+    if (elem) {
+      // entered
+      playerRef.current.isFullscreen = true;
+      // player.$el.setAttribute("style", "width: 100vw; height: 100vh"); // necessary for safari
+    } else {
+      // exited
+      playerRef.current.isFullscreen = false;
+      // player.$el.removeAttribute("style");
+    }
+  };
+
+  const onContainerMouseEnter = () => {
+    setIsContainerHovering(true);
+  };
+
+  const onContainerMouseLeave = () => {
+    setIsContainerHovering(false);
+  };
+
   const changeMenu = (type: ConfigMenuType, value: number) => {
     const updatedMenu = menus.map((menu) => {
       if (menu.type === type) {
@@ -190,16 +220,16 @@ function Player({ src, width }: PlayerProps, ref: any) {
       case ConfigMenuType.Resolution:
         if (value === 0) {
           const config = { abr: { enabled: true } };
-          player?.configure(config);
+          playerRef.current?.configure(config);
         } else {
           const config = { abr: { enabled: false } };
-          player?.configure(config);
+          playerRef.current?.configure(config);
 
-          const allTracks = player?.getVariantTracks();
+          const allTracks = playerRef.current?.getVariantTracks();
           const selectedTrack = allTracks?.filter(
             (track: any) => track.height === value
           );
-          player.selectVariantTrack(selectedTrack, true);
+          playerRef.current?.selectVariantTrack(selectedTrack, true);
         }
 
         break;
@@ -220,29 +250,6 @@ function Player({ src, width }: PlayerProps, ref: any) {
     setPaused(!paused);
   };
 
-  const toggleMute = () => {
-    if (isMuted) {
-      setIsMuted(false);
-      console.log(
-        "if video.volume:",
-        video.volume,
-        "savedVolume:",
-        savedVolume
-      );
-      video.volume = savedVolume;
-    } else {
-      setIsMuted(true);
-      savedVolume = video.volume;
-      console.log(
-        "else video.volume:",
-        video.volume,
-        "savedVolume:",
-        savedVolume
-      );
-      video.volume = 0;
-    }
-  };
-
   useEffect(() => {
     const initPlayer = async () => {
       shaka.polyfill.installAll();
@@ -252,7 +259,7 @@ function Player({ src, width }: PlayerProps, ref: any) {
         await player.load(src);
         console.log("player.getVariantTracks: ", player?.getVariantTracks());
 
-        setPlayer(player);
+        playerRef.current = player;
 
         player.addEventListener("buffering", (event: any) => {
           setIsBuffering(event.buffering);
@@ -267,12 +274,43 @@ function Player({ src, width }: PlayerProps, ref: any) {
     if (videoRef?.current) {
       videoRef?.current.addEventListener("timeupdate", onTimeUpdateListener);
       videoRef?.current.addEventListener("progress", onProgressListener);
+
+      document.addEventListener("fullscreenchange", onFullscreenChangeListener);
+      document.addEventListener(
+        "webkitfullscreenchange",
+        onFullscreenChangeListener
+      );
+      document.addEventListener(
+        "mozfullscreenchange",
+        onFullscreenChangeListener
+      );
+      document.addEventListener(
+        "MSFullscreenChange",
+        onFullscreenChangeListener
+      );
     }
 
     return function cleanUp() {
       console.log("cleaning...");
       videoRef?.current.removeEventListener("timeupdate", onTimeUpdateListener);
       videoRef?.current.removeEventListener("progress", onProgressListener);
+
+      document.removeEventListener(
+        "fullscreenchange",
+        onFullscreenChangeListener
+      );
+      document.removeEventListener(
+        "webkitfullscreenchange",
+        onFullscreenChangeListener
+      );
+      document.removeEventListener(
+        "mozfullscreenchange",
+        onFullscreenChangeListener
+      );
+      document.removeEventListener(
+        "MSFullscreenChange",
+        onFullscreenChangeListener
+      );
     };
   }, []);
 
@@ -282,149 +320,165 @@ function Player({ src, width }: PlayerProps, ref: any) {
     },
   }));
 
+  const containerClasses = classNames(styles.mplayer, {
+    [styles.fulled]: isBrowserFullScreen,
+  });
   return (
-    <div className={styles.mplayer} onContextMenu={onContextMenu}>
+    <div
+      className={containerClasses}
+      onContextMenu={onContextMenu}
+      onMouseEnter={onContainerMouseEnter}
+      onMouseLeave={onContainerMouseLeave}
+      ref={mplayerRef}
+    >
       <video ref={videoRef} className={styles.video} onClick={togglePlay} />
 
-      <div className={styles.controls}>
-        <div className={styles.left}>
-          <ConfigIcon name={paused ? "play" : "pause"} onClick={togglePlay} />
+      {isContainerHovering && (
+        <div className={styles.controls}>
+          <div className={styles.left}>
+            <ConfigIcon name={paused ? "play" : "pause"} onClick={togglePlay} />
 
-          <div
-            className={`volume-control`}
-            onMouseEnter={() => null}
-            onMouseLeave={() => null}
-          >
-            <ConfigIcon name="volume-2" onClick={toggleMute} />
-            <div className="volumeSlider" onMouseDown={() => null}>
-              <div className="volume-slider-handle" />
+            <VolumeControl video={video} />
+            <div className={styles.timeDisplay}>
+              <span>{getFormattedTime(videoInfo?.current)}</span>
+              <span>{` / `}</span>
+              <span>{getFormattedTime(videoInfo?.duration)}</span>
             </div>
           </div>
-          <div className={styles.timeDisplay}>
-            <span>{getFormattedTime(videoInfo?.current)}</span>
-            <span>{` / `}</span>
-            <span>{getFormattedTime(videoInfo?.duration)}</span>
-          </div>
-        </div>
 
-        <div className={styles.right}>
-          <div className={styles.setting}>
+          <div className={styles.right}>
+            <div className={styles.setting}>
+              <ConfigIcon
+                name="settings"
+                onClick={() => {
+                  setShowSetting(!showSetting);
+                }}
+              />
+              {video?.videoHeight && (
+                <span className={styles.resolution}>{video?.videoHeight}</span>
+              )}
+            </div>
+
             <ConfigIcon
-              name="settings"
+              name="code"
+              className={styles.browserFullScreen}
               onClick={() => {
-                setShowSetting(!showSetting);
+                setIsBrowserFullScreen(!isBrowserFullScreen);
               }}
             />
-            {video?.videoHeight && (
-              <span className={styles.resolution}>{video?.videoHeight}</span>
+            <ConfigIcon
+              name={isFullScreen ? "minimize-2" : "maximize-2"}
+              onClick={() => {
+                // setShowSetting(!showSetting);
+                let func;
+                let elem;
+                if (isFullScreen) {
+                  elem = document;
+                  func =
+                    document?.exitFullscreen ||
+                    document?.webkitExitFullscreen ||
+                    document?.mozCancelFullScreen ||
+                    document?.msExitFullscreen;
+                } else {
+                  elem = mplayerRef.current;
+                  func =
+                    elem.requestFullscreen ||
+                    elem.webkitRequestFullscreen ||
+                    elem.mozRequestFullScreen ||
+                    elem.msRequestFullscreen;
+                }
+                if (func) {
+                  func.call(elem);
+                }
+                setIsFullScreen(!isFullScreen);
+              }}
+            />
+
+            {showSetting && (
+              <div className={styles.playSettings}>
+                <div className={styles.menu}>
+                  {currentMenu ? (
+                    <>
+                      <div
+                        className={styles.menuBack}
+                        onClick={() => changeSubMenu(null)}
+                      >
+                        <Icon
+                          name="chevron-left"
+                          className={styles.menuBackIcon}
+                        />
+                        <span className={styles.menuBackTitle}>
+                          {currentMenu?.title}
+                        </span>
+                      </div>
+
+                      {(currentMenu?.children ?? []).map(
+                        (menu: ConfigMenuItem) => (
+                          <div className={styles.menuItem}>
+                            <div
+                              className={styles.menuOption}
+                              onClick={() =>
+                                changeMenu(currentMenu.type, menu.value)
+                              }
+                            >
+                              {menu.selected && (
+                                <Icon
+                                  name="check"
+                                  className={styles.selectedIcon}
+                                />
+                              )}
+                              <span>
+                                {formatMenuContent(
+                                  menu.value,
+                                  currentMenu.type
+                                )}
+                              </span>
+                            </div>
+                          </div>
+                        )
+                      )}
+                    </>
+                  ) : (
+                    menus.map((menu) => (
+                      <div
+                        className={styles.menuItem}
+                        onClick={() => changeSubMenu(menu)}
+                      >
+                        <span className={styles.menuTitle}>{menu.title}</span>
+                        <span className={styles.menuContent}>
+                          {formatMenuContent(menu.value, menu.type)}
+                        </span>
+                      </div>
+                    ))
+                  )}
+                </div>
+              </div>
             )}
           </div>
-
-          <ConfigIcon
-            name={isFullScreen ? "minimize-2" : "maximize-2"}
-            onClick={() => {
-              // setShowSetting(!showSetting);
-              let func;
-              let elem;
-              if (isFullScreen) {
-                elem = document;
-                func =
-                  document?.exitFullscreen ||
-                  document?.webkitExitFullscreen ||
-                  document?.mozCancelFullScreen ||
-                  document?.msExitFullscreen;
-              } else {
-                elem = videoRef.current;
-                func =
-                  elem.requestFullscreen ||
-                  elem.webkitRequestFullscreen ||
-                  elem.mozRequestFullScreen ||
-                  elem.msRequestFullscreen;
-              }
-              if (func) {
-                func.call(elem);
-              }
-              setIsFullScreen(!isFullScreen);
-            }}
-          />
-
-          {showSetting && (
-            <div className={styles.playSettings}>
-              <div className={styles.menu}>
-                {currentMenu ? (
-                  <>
-                    <div
-                      className={styles.menuBack}
-                      onClick={() => changeSubMenu(null)}
-                    >
-                      <Icon
-                        name="chevron-left"
-                        className={styles.menuBackIcon}
-                      />
-                      <span className={styles.menuBackTitle}>
-                        {currentMenu?.title}
-                      </span>
-                    </div>
-
-                    {(currentMenu?.children ?? []).map(
-                      (menu: ConfigMenuItem) => (
-                        <div className={styles.menuItem}>
-                          <div
-                            className={styles.menuOption}
-                            onClick={() =>
-                              changeMenu(currentMenu.type, menu.value)
-                            }
-                          >
-                            {menu.selected && (
-                              <Icon
-                                name="check"
-                                className={styles.selectedIcon}
-                              />
-                            )}
-                            <span>
-                              {formatMenuContent(menu.value, currentMenu.type)}
-                            </span>
-                          </div>
-                        </div>
-                      )
-                    )}
-                  </>
-                ) : (
-                  menus.map((menu) => (
-                    <div
-                      className={styles.menuItem}
-                      onClick={() => changeSubMenu(menu)}
-                    >
-                      <span className={styles.menuTitle}>{menu.title}</span>
-                      <span className={styles.menuContent}>
-                        {formatMenuContent(menu.value, menu.type)}
-                      </span>
-                    </div>
-                  ))
-                )}
-              </div>
-            </div>
-          )}
         </div>
-      </div>
+      )}
 
-      <div
-        className={styles.seekArea}
-        onMouseDown={onMouseDown}
-        onMouseUp={onMouseUp}
-      />
-      <div className={styles.progressBar}>
-        <span
-          className={styles.played}
-          style={{
-            width: `${(videoInfo?.current / videoInfo?.duration) * 100}%`,
-          }}
-        />
-        <span
-          className={styles.buffered}
-          style={{ width: `${videoInfo?.buffered}%` }}
-        />
-      </div>
+      {isContainerHovering && (
+        <>
+          <div
+            className={styles.seekArea}
+            onMouseDown={onMouseDown}
+            onMouseUp={onMouseUp}
+          />
+          <div className={styles.progressBar}>
+            <span
+              className={styles.played}
+              style={{
+                width: `${(videoInfo?.current / videoInfo?.duration) * 100}%`,
+              }}
+            />
+            <span
+              className={styles.buffered}
+              style={{ width: `${videoInfo?.buffered}%` }}
+            />
+          </div>
+        </>
+      )}
 
       {isBuffering && <Loading className={styles.loading} />}
     </div>

@@ -17,7 +17,8 @@ export default function Home({ match }: any) {
         width={1280}
         // src="http://kr.prpr.io/docker-test/index.mpd"
         // src="http://5.9.136.247/[Sakurato.Sub][Kaguya-sama%20wa%20Kokurasetai%20S2][03][GB][1080P]/index.mpd"
-        src="https://gss3.baidu.com/6LZ0ej3k1Qd3ote6lo7D0j9wehsv/tieba-smallvideo/607272_b47f136b14f28e92d9f46d72b73bc081.mp4"
+        src="https://gss3.baidu.com/6LZ0ej3k1Qd3ote6lo7D0j9wehsv/tieba-smallvideo/607272_b67058781fd9ae01d9e907b66d55782d.mp4"
+        // src="https://gss3.baidu.com/6LZ0ej3k1Qd3ote6lo7D0j9wehsv/tieba-smallvideo/607272_b47f136b14f28e92d9f46d72b73bc081.mp4"
         // src="https://gss3.baidu.com/6LZ0ej3k1Qd3ote6lo7D0j9wehsv/tieba-smallvideo/19649098_1b963a65be1d87914d76082627572fad.mp4"
         ref={playerRef}
       />

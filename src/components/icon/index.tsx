@@ -14,7 +14,8 @@ const Icon = ({ name, onClick, style, className }: IconProps) => {
   return <i className={classes} style={style} onClick={onClick} />;
 };
 
-export const ConfigIcon = ({ name, onClick }: IconProps) => (
-  <Icon name={name} onClick={onClick} className={styles.playControl} />
-);
+export const ConfigIcon = ({ name, onClick, className }: IconProps) => {
+  const classes = classNames(styles.playControl, className);
+  return <Icon name={name} onClick={onClick} className={classes} />;
+};
 export default Icon;
