@@ -26,6 +26,7 @@ export const VolumeControl = ({ video }: VolumeControlProps) => {
 
   useEffect(() => {
     video?.addEventListener("volumechange", onVolumeChangeListener);
+    // trigger volume init
     onVolumeChangeListener();
 
     return () => {

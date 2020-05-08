@@ -19,6 +19,7 @@ import { VolumeControl } from "./volumeControl";
 interface PlayerProps {
   src: string;
   width?: number;
+  autoPlay?: boolean;
 }
 
 interface VideoInfoProps {
@@ -39,7 +40,7 @@ export interface ConfigMenuItem {
   children?: ConfigMenuItem[];
 }
 
-function Player({ src, width }: PlayerProps, ref: any) {
+function Player({ src, width, autoPlay }: PlayerProps, ref: any) {
   const videoRef = useRef(null);
   const mplayerRef = useRef(null);
   const [paused, setPaused] = useState(true);
@@ -343,6 +344,10 @@ function Player({ src, width }: PlayerProps, ref: any) {
         onFullscreenChangeListener
       );
       window.addEventListener("keydown", onKeydownListener);
+
+      if (autoPlay) {
+        togglePlay();
+      }
     }
 
     return function cleanUp() {
