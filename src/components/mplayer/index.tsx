@@ -50,6 +50,7 @@ function Player({ src, width }: PlayerProps, ref: any) {
   const [isContainerHovering, setIsContainerHovering] = useState(false);
   const playerRef = useRef(null);
   const [isBuffering, setIsBuffering] = useState(false);
+  const timer = useRef(null);
   const video = videoRef?.current;
 
   const [menus, setMenus] = useState<ConfigMenuItem[]>(
@@ -183,7 +184,18 @@ function Player({ src, width }: PlayerProps, ref: any) {
   };
 
   const onContainerMouseEnter = () => {
+    console.log("onContainerMouseEnter");
     setIsContainerHovering(true);
+  };
+
+  const onContainerMouseMove = () => {
+    setIsContainerHovering(true);
+    if (timer.current) {
+      clearTimeout(timer.current);
+    }
+    timer.current = setTimeout(() => {
+      setIsContainerHovering(false);
+    }, 3000);
   };
 
   const onContainerMouseLeave = () => {
@@ -323,12 +335,14 @@ function Player({ src, width }: PlayerProps, ref: any) {
   const containerClasses = classNames(styles.mplayer, {
     [styles.fulled]: isBrowserFullScreen,
   });
+
   return (
     <div
       className={containerClasses}
       onContextMenu={onContextMenu}
       onMouseEnter={onContainerMouseEnter}
       onMouseLeave={onContainerMouseLeave}
+      onMouseMove={onContainerMouseMove}
       ref={mplayerRef}
     >
       <video ref={videoRef} className={styles.video} onClick={togglePlay} />
@@ -458,27 +472,24 @@ function Player({ src, width }: PlayerProps, ref: any) {
         </div>
       )}
 
-      {isContainerHovering && (
-        <>
-          <div
-            className={styles.seekArea}
-            onMouseDown={onMouseDown}
-            onMouseUp={onMouseUp}
-          />
-          <div className={styles.progressBar}>
-            <span
-              className={styles.played}
-              style={{
-                width: `${(videoInfo?.current / videoInfo?.duration) * 100}%`,
-              }}
-            />
-            <span
-              className={styles.buffered}
-              style={{ width: `${videoInfo?.buffered}%` }}
-            />
-          </div>
-        </>
-      )}
+      <div
+        className={styles.seekArea}
+        onMouseDown={onMouseDown}
+        onMouseUp={onMouseUp}
+      />
+
+      <div className={styles.progressBar}>
+        <span
+          className={styles.played}
+          style={{
+            width: `${(videoInfo?.current / videoInfo?.duration) * 100}%`,
+          }}
+        />
+        <span
+          className={styles.buffered}
+          style={{ width: `${videoInfo?.buffered}%` }}
+        />
+      </div>
 
       {isBuffering && <Loading className={styles.loading} />}
     </div>
