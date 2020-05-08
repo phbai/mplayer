@@ -184,7 +184,6 @@ function Player({ src, width }: PlayerProps, ref: any) {
   };
 
   const onContainerMouseEnter = () => {
-    console.log("onContainerMouseEnter");
     setIsContainerHovering(true);
   };
 
@@ -195,11 +194,53 @@ function Player({ src, width }: PlayerProps, ref: any) {
     }
     timer.current = setTimeout(() => {
       setIsContainerHovering(false);
-    }, 3000);
+    }, 4000);
   };
 
   const onContainerMouseLeave = () => {
     setIsContainerHovering(false);
+  };
+
+  const onKeydownListener = (event: any) => {
+    if (event.target.nodeName === "INPUT") {
+      return;
+    }
+    const video = videoRef?.current;
+    switch (event.which) {
+      case 32: {
+        // space
+        console.log("按下了空格键");
+        event.preventDefault();
+        togglePlay();
+        break;
+      }
+      case 37: {
+        // arrow left
+        event.preventDefault();
+        video.currentTime = Math.max(0, video.currentTime - 5);
+        break;
+      }
+      case 39: {
+        // arrow right
+        event.preventDefault();
+        video.currentTime = Math.min(video.duration, video.currentTime + 5);
+        break;
+      }
+      case 70: {
+        // char f
+        event.preventDefault();
+        // this.$emit('signal-toggle-fullscreen')
+        break;
+      }
+      case 77: {
+        // char m
+        event.preventDefault();
+        // this.$emit('signal-toggle-mute')
+        break;
+      }
+      default:
+        break;
+    }
   };
 
   const changeMenu = (type: ConfigMenuType, value: number) => {
@@ -254,6 +295,7 @@ function Player({ src, width }: PlayerProps, ref: any) {
   };
 
   const togglePlay = () => {
+    console.log("togglePlay");
     if (paused) {
       video?.play();
     } else {
@@ -300,6 +342,7 @@ function Player({ src, width }: PlayerProps, ref: any) {
         "MSFullscreenChange",
         onFullscreenChangeListener
       );
+      window.addEventListener("keydown", onKeydownListener);
     }
 
     return function cleanUp() {
@@ -323,6 +366,7 @@ function Player({ src, width }: PlayerProps, ref: any) {
         "MSFullscreenChange",
         onFullscreenChangeListener
       );
+      window.removeEventListener("keydown", onKeydownListener);
     };
   }, []);
 
@@ -347,133 +391,134 @@ function Player({ src, width }: PlayerProps, ref: any) {
     >
       <video ref={videoRef} className={styles.video} onClick={togglePlay} />
 
-      {isContainerHovering && (
-        <div className={styles.controls}>
-          <div className={styles.left}>
-            <ConfigIcon name={paused ? "play" : "pause"} onClick={togglePlay} />
+      <div
+        className={classNames(styles.controls, {
+          [styles.hidden]: !isContainerHovering,
+        })}
+      >
+        <div className={styles.left}>
+          <ConfigIcon name={paused ? "play" : "pause"} onClick={togglePlay} />
 
-            <VolumeControl video={video} />
-            <div className={styles.timeDisplay}>
-              <span>{getFormattedTime(videoInfo?.current)}</span>
-              <span>{` / `}</span>
-              <span>{getFormattedTime(videoInfo?.duration)}</span>
-            </div>
-          </div>
-
-          <div className={styles.right}>
-            <div className={styles.setting}>
-              <ConfigIcon
-                name="settings"
-                onClick={() => {
-                  setShowSetting(!showSetting);
-                }}
-              />
-              {video?.videoHeight && (
-                <span className={styles.resolution}>{video?.videoHeight}</span>
-              )}
-            </div>
-
-            <ConfigIcon
-              name="code"
-              className={styles.browserFullScreen}
-              onClick={() => {
-                setIsBrowserFullScreen(!isBrowserFullScreen);
-              }}
-            />
-            <ConfigIcon
-              name={isFullScreen ? "minimize-2" : "maximize-2"}
-              onClick={() => {
-                // setShowSetting(!showSetting);
-                let func;
-                let elem;
-                if (isFullScreen) {
-                  elem = document;
-                  func =
-                    document?.exitFullscreen ||
-                    document?.webkitExitFullscreen ||
-                    document?.mozCancelFullScreen ||
-                    document?.msExitFullscreen;
-                } else {
-                  elem = mplayerRef.current;
-                  func =
-                    elem.requestFullscreen ||
-                    elem.webkitRequestFullscreen ||
-                    elem.mozRequestFullScreen ||
-                    elem.msRequestFullscreen;
-                }
-                if (func) {
-                  func.call(elem);
-                }
-                setIsFullScreen(!isFullScreen);
-              }}
-            />
-
-            {showSetting && (
-              <div className={styles.playSettings}>
-                <div className={styles.menu}>
-                  {currentMenu ? (
-                    <>
-                      <div
-                        className={styles.menuBack}
-                        onClick={() => changeSubMenu(null)}
-                      >
-                        <Icon
-                          name="chevron-left"
-                          className={styles.menuBackIcon}
-                        />
-                        <span className={styles.menuBackTitle}>
-                          {currentMenu?.title}
-                        </span>
-                      </div>
-
-                      {(currentMenu?.children ?? []).map(
-                        (menu: ConfigMenuItem) => (
-                          <div className={styles.menuItem}>
-                            <div
-                              className={styles.menuOption}
-                              onClick={() =>
-                                changeMenu(currentMenu.type, menu.value)
-                              }
-                            >
-                              {menu.selected && (
-                                <Icon
-                                  name="check"
-                                  className={styles.selectedIcon}
-                                />
-                              )}
-                              <span>
-                                {formatMenuContent(
-                                  menu.value,
-                                  currentMenu.type
-                                )}
-                              </span>
-                            </div>
-                          </div>
-                        )
-                      )}
-                    </>
-                  ) : (
-                    menus.map((menu) => (
-                      <div
-                        className={styles.menuItem}
-                        onClick={() => changeSubMenu(menu)}
-                      >
-                        <span className={styles.menuTitle}>{menu.title}</span>
-                        <span className={styles.menuContent}>
-                          {formatMenuContent(menu.value, menu.type)}
-                        </span>
-                      </div>
-                    ))
-                  )}
-                </div>
-              </div>
-            )}
+          <VolumeControl video={video} />
+          <div className={styles.timeDisplay}>
+            <span>{getFormattedTime(videoInfo?.current)}</span>
+            <span>{` / `}</span>
+            <span>{getFormattedTime(videoInfo?.duration)}</span>
           </div>
         </div>
-      )}
+
+        <div className={styles.right}>
+          <div className={styles.setting}>
+            <ConfigIcon
+              name="settings"
+              onClick={() => {
+                setShowSetting(!showSetting);
+              }}
+            />
+            {video?.videoHeight && (
+              <span className={styles.resolution}>{video?.videoHeight}</span>
+            )}
+          </div>
+
+          <ConfigIcon
+            name="tv"
+            className={styles.browserFullScreen}
+            onClick={() => {
+              setIsBrowserFullScreen(!isBrowserFullScreen);
+            }}
+          />
+          <ConfigIcon
+            name={isFullScreen ? "minimize-2" : "maximize-2"}
+            onClick={() => {
+              // setShowSetting(!showSetting);
+              let func;
+              let elem;
+              if (isFullScreen) {
+                elem = document;
+                func =
+                  document?.exitFullscreen ||
+                  document?.webkitExitFullscreen ||
+                  document?.mozCancelFullScreen ||
+                  document?.msExitFullscreen;
+              } else {
+                elem = mplayerRef.current;
+                func =
+                  elem.requestFullscreen ||
+                  elem.webkitRequestFullscreen ||
+                  elem.mozRequestFullScreen ||
+                  elem.msRequestFullscreen;
+              }
+              if (func) {
+                func.call(elem);
+              }
+              setIsFullScreen(!isFullScreen);
+            }}
+          />
+
+          {showSetting && (
+            <div className={styles.playSettings}>
+              <div className={styles.menu}>
+                {currentMenu ? (
+                  <>
+                    <div
+                      className={styles.menuBack}
+                      onClick={() => changeSubMenu(null)}
+                    >
+                      <Icon
+                        name="chevron-left"
+                        className={styles.menuBackIcon}
+                      />
+                      <span className={styles.menuBackTitle}>
+                        {currentMenu?.title}
+                      </span>
+                    </div>
+
+                    {(currentMenu?.children ?? []).map(
+                      (menu: ConfigMenuItem) => (
+                        <div className={styles.menuItem}>
+                          <div
+                            className={styles.menuOption}
+                            onClick={() =>
+                              changeMenu(currentMenu.type, menu.value)
+                            }
+                          >
+                            {menu.selected && (
+                              <Icon
+                                name="check"
+                                className={styles.selectedIcon}
+                              />
+                            )}
+                            <span>
+                              {formatMenuContent(menu.value, currentMenu.type)}
+                            </span>
+                          </div>
+                        </div>
+                      )
+                    )}
+                  </>
+                ) : (
+                  menus.map((menu) => (
+                    <div
+                      className={styles.menuItem}
+                      onClick={() => changeSubMenu(menu)}
+                    >
+                      <span className={styles.menuTitle}>{menu.title}</span>
+                      <span className={styles.menuContent}>
+                        {formatMenuContent(menu.value, menu.type)}
+                      </span>
+                    </div>
+                  ))
+                )}
+              </div>
+            </div>
+          )}
+        </div>
+      </div>
 
       <div
-        className={styles.seekArea}
+        className={classNames(styles.seekArea, {
+          [styles.hidden]: !isContainerHovering,
+        })}
         onMouseDown={onMouseDown}
         onMouseUp={onMouseUp}
       />
