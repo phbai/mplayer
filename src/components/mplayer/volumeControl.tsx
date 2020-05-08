@@ -26,13 +26,15 @@ export const VolumeControl = ({ video }: VolumeControlProps) => {
 
   useEffect(() => {
     video?.addEventListener("volumechange", onVolumeChangeListener);
+    onVolumeChangeListener();
+
     return () => {
       video?.removeEventListener("volumechange", onVolumeChangeListener);
     };
   }, [video]);
 
   const onVolumeChangeListener = () => {
-    const { volume } = video;
+    const volume = video?.volume ?? 1;
     let left = SLIDER_WIDTH * volume - HANDLE_WIDTH / 2;
     left = Math.max(left, 0);
     left = Math.min(left, SLIDER_WIDTH - HANDLE_WIDTH);
