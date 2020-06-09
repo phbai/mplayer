@@ -1,6 +1,6 @@
 ## mplayer
 
-![image](https://imgur.com/a/TYbe4GD)
+![image](https://i.imgur.com/ccPmsse.jpg)
 
 ## Introduction
 
