@@ -2,27 +2,28 @@ import React, { useState, useRef, useEffect } from "react";
 import { Input, Progress, Button } from "antd";
 import _ from "lodash";
 import Container from "../components/container/index";
-const { Search } = Input;
 import style from "./home.less";
 import Player from "../components/mplayer/index";
-import Icon from "../components/icon/index";
 
 export default function Home({ match }: any) {
   const playerRef = React.createRef();
-  // const { player, ui, videoElement } = controllerRef.current;
+  const inputRef = useRef(null);
+  const [src, setSrc] = useState(
+    "http://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ElephantsDream.mp4"
+  );
+
+  const onChangeUrl = () => {
+    const url = inputRef.current.value;
+    setSrc(url);
+  };
 
   return (
     <Container className={style.homePage}>
-      <Player
-        width={1280}
-        src="http://kr.prpr.io/docker-test/index.mpd"
-        // src="http://5.9.136.247/[Sakurato.Sub][Kaguya-sama%20wa%20Kokurasetai%20S2][03][GB][1080P]/index.mpd"
-        // src="https://gss3.baidu.com/6LZ0ej3k1Qd3ote6lo7D0j9wehsv/tieba-smallvideo/607272_b67058781fd9ae01d9e907b66d55782d.mp4"
-        // src="https://gss3.baidu.com/6LZ0ej3k1Qd3ote6lo7D0j9wehsv/tieba-smallvideo/607272_b47f136b14f28e92d9f46d72b73bc081.mp4"
-        // src="https://gss3.baidu.com/6LZ0ej3k1Qd3ote6lo7D0j9wehsv/tieba-smallvideo/19649098_1b963a65be1d87914d76082627572fad.mp4"
-        ref={playerRef}
-        autoPlay
-      />
+      <div style={{ marginBottom: 10, display: "flex" }}>
+        <input ref={inputRef} style={{ flex: 1, marginRight: 10 }} />
+        <button onClick={onChangeUrl}>播放</button>
+      </div>
+      <Player width={1280} src={src} ref={playerRef} />
     </Container>
   );
 }

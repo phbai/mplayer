@@ -1,10 +1,17 @@
-## webpack-template
+## mplayer
 
-## usuage
+![image](https://imgur.com/a/TYbe4GD)
+
+## Introduction
+
+界面简洁的 react 播放器组件, 支持 m3u8、dash、mp4 等多种格式。
+
+## Get started
 
 ```bash
-# 开发模式
+# install dependencies
+yarn
+
+# start development
 yarn start
-# 生产模式
-yarn build
 ```

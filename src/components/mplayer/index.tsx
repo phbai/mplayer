@@ -373,7 +373,7 @@ function Player({ src, width, autoPlay }: PlayerProps, ref: any) {
       );
       window.removeEventListener("keydown", onKeydownListener);
     };
-  }, []);
+  }, [src]);
 
   useImperativeHandle(ref, () => ({
     get video() {
